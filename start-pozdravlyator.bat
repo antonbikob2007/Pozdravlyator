@@ -1,25 +1,20 @@
 @echo off
-chcp 65001 > nul
 cd /d "%~dp0"
 
 echo ========================================
-echo  ПОЗДРАВЛЯТОР - ЗАПУСК
+echo  POZDRAVLYATOR - START
 echo ========================================
 echo.
 
-:: =============================================
-:: 1. ПРОВЕРКА .NET SDK
-:: =============================================
-
 where dotnet > nul 2>&1
 if errorlevel 1 (
-    echo [ОШИБКА] .NET SDK не найден!
+    echo [ERROR] .NET SDK not found!
     echo.
-    echo Открываем страницу для скачивания...
+    echo Opening download page...
     start https://dotnet.microsoft.com/download/dotnet/8.0
     echo.
-    echo Скачай и установи .NET 8.0 SDK
-    echo После установки перезагрузи компьютер
+    echo Download and install .NET 8.0 SDK
+    echo Restart your computer after installation
     echo.
     pause
     exit /b
@@ -29,29 +24,23 @@ for /f "tokens=*" %%i in ('dotnet --version') do set DOTNET_VER=%%i
 echo [OK] .NET SDK: %DOTNET_VER%
 echo.
 
-:: =============================================
-:: 2. ПРОВЕРКА ASP.NET CORE RUNTIME 8.0
-:: =============================================
+echo Checking ASP.NET Core Runtime 8.0...
 
-echo Проверка ASP.NET Core Runtime 8.0...
-
-:: Сохраняем список установленных runtime в файл
 dotnet --list-runtimes > "%TEMP%\runtimes.txt"
-
-:: Ищем точное совпадение с 8.0
 findstr /C:"Microsoft.AspNetCore.App 8." "%TEMP%\runtimes.txt" > nul
+
 if errorlevel 1 (
     echo.
-    echo [ОШИБКА] ASP.NET Core Runtime 8.0 не найден!
+    echo [ERROR] ASP.NET Core Runtime 8.0 not found!
     echo.
-    echo Установленные runtime:
+    echo Installed runtimes:
     type "%TEMP%\runtimes.txt"
     echo.
-    echo Открываем страницу для скачивания...
+    echo Opening download page...
     start https://dotnet.microsoft.com/download/dotnet/8.0
     echo.
-    echo Скачай и установи ASP.NET Core Runtime 8.0
-    echo После установки перезагрузи компьютер
+    echo Download and install ASP.NET Core Runtime 8.0
+    echo Restart your computer after installation
     echo.
     del "%TEMP%\runtimes.txt"
     pause
@@ -59,47 +48,39 @@ if errorlevel 1 (
 )
 
 del "%TEMP%\runtimes.txt"
-echo [OK] ASP.NET Core Runtime 8.0 найден
+echo [OK] ASP.NET Core Runtime 8.0 found
 echo.
 
-:: =============================================
-:: 3. ЗАПУСК СЕРВЕРА
-:: =============================================
-
-:: Проверка проекта
 if not exist "src\Pozdravlyator.Api\Pozdravlyator.Api.csproj" (
-    echo [ОШИБКА] Проект не найден!
+    echo [ERROR] Project not found!
     pause
     exit /b
 )
 
-:: Копирование фронтенда
 if not exist "src\Pozdravlyator.Api\wwwroot\index.html" (
-    echo Копирование файлов...
+    echo Copying frontend files...
     xcopy /E /I /Y pozdravlyator.client\* src\Pozdravlyator.Api\wwwroot\ > nul 2>&1
-    echo [OK] Файлы скопированы
+    echo [OK] Files copied
 )
 echo.
 
-:: Проверка ngrok
 set USE_NGROK=N
 where ngrok > nul 2>&1
 if errorlevel 1 (
-    echo [ВНИМАНИЕ] ngrok не найден
-    echo Публичный доступ не будет работать
+    echo [WARN] ngrok not found
+    echo Public access will not work
     echo.
-    echo Скачать ngrok: https://ngrok.com/download
+    echo Download ngrok: https://ngrok.com/download
     echo.
 ) else (
-    echo [OK] ngrok найден
+    echo [OK] ngrok found
     echo.
-    echo Использовать ngrok для публичного доступа? (Y/N)
-    choice /C YN /N /M "Ваш выбор: "
+    echo Use ngrok for public access? (Y/N)
+    choice /C YN /N /M "Your choice: "
     if not errorlevel 2 set USE_NGROK=Y
 )
 echo.
 
-:: Получаем IP
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr "IPv4"') do set IP=%%a
 set IP=%IP: =%
 set IP=%IP:IPv4-address. . . . . . . . . . . =%
@@ -108,15 +89,13 @@ set IP=%IP:IPv4-адрес. . . . . . . . . . . =%
 echo [OK] IP: %IP%
 echo.
 
-:: Запуск сервера
-echo Запуск сервера...
+echo Starting server...
 start "Server" cmd /k "cd /d "%~dp0src\Pozdravlyator.Api" && dotnet run --urls="http://0.0.0.0:5029""
 
 timeout /t 8 /nobreak > nul
 
-:: Запуск ngrok
 if "%USE_NGROK%"=="Y" (
-    echo Запуск ngrok...
+    echo Starting ngrok...
     start "Ngrok" cmd /k "ngrok http 5029"
     timeout /t 3 /nobreak > nul
 
@@ -127,13 +106,13 @@ if "%USE_NGROK%"=="Y" (
 
 echo.
 echo ========================================
-echo  СЕРВЕР ЗАПУЩЕН
+echo  SERVER STARTED
 echo ========================================
-echo  Локально:    http://localhost:5029
-echo  Локально:    http://%IP%:5029
+echo  Local:       http://localhost:5029
+echo  Local:       http://%IP%:5029
 echo  Swagger:     http://localhost:5029/swagger
-if "%USE_NGROK%"=="Y" echo  Публичная:   %NGROK_URL%
+if "%USE_NGROK%"=="Y" echo  Public:      %NGROK_URL%
 echo ========================================
 echo.
-echo Не закрывай окна. Для остановки Ctrl+C
+echo Keep windows open. Press Ctrl+C to stop
 pause
