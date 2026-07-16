@@ -5,10 +5,10 @@
 
 Учебный проект: SPA + Web API + база данных.
 
-[](https://github.com/antonbikob2007/Pozdravlyator)[https://img.shields.io/badge/version-1.0.0-blue](https://img.shields.io/badge/version-1.0.0-blue)  
-[](https://github.com/antonbikob2007/Pozdravlyator)[https://img.shields.io/badge/.NET-9.0-purple](https://img.shields.io/badge/.NET-9.0-purple)  
-[](https://github.com/antonbikob2007/Pozdravlyator)[https://img.shields.io/badge/SQLite-3.0-lightblue](https://img.shields.io/badge/SQLite-3.0-lightblue)  
-[](https://github.com/antonbikob2007/Pozdravlyator)[https://img.shields.io/badge/JavaScript-ES6-yellow](https://img.shields.io/badge/JavaScript-ES6-yellow)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/antonbikob2007/Pozdravlyator)
+[![.NET](https://img.shields.io/badge/.NET-9.0-purple)](https://github.com/antonbikob2007/Pozdravlyator)
+[![SQLite](https://img.shields.io/badge/SQLite-3.0-lightblue)](https://github.com/antonbikob2007/Pozdravlyator)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow)](https://github.com/antonbikob2007/Pozdravlyator)
 
 ----------
 
@@ -53,31 +53,6 @@
 -   Fetch API — HTTP-запросы к серверу
     
 
-----------
-
-## 📁 Структура проекта
-
-text
-
-Pozdravlyator/
-├── src/
-│   ├── Pozdravlyator.Api/          # Web API
-│   │   ├── Controllers/            # API-эндпоинты
-│   │   ├── wwwroot/                # Статика (фото, фронтенд)
-│   │   └── Program.cs              # Настройка приложения
-│   ├── Pozdravlyator.Core/         # Бизнес-сущности и DTO
-│   │   ├── Entities/               # Доменная модель
-│   │   └── DTOs/                   # Объекты передачи данных
-│   └── Pozdravlyator.Infrastructure/ # Работа с БД
-│       └── Data/                   # DbContext и конфигурация
-├── pozdravlyator.client/           # Frontend (HTML+CSS+JS)
-│   ├── index.html                  # Главная страница
-│   ├── style.css                   # Стили
-│   └── script.js                   # Клиентская логика
-└── start-pozdravlyator.bat         # Скрипт запуска
-
-----------
-
 ## 🚀 Запуск
 
 **Требования:**
@@ -92,11 +67,9 @@ Pozdravlyator/
 
 **Backend:**
 
-text
-
-cd src/Pozdravlyator.Api
-dotnet restore
-dotnet run --urls="http://0.0.0.0:5029"
+    cd src/Pozdravlyator.Api
+    dotnet restore
+    dotnet run --urls="http://0.0.0.0:5029"
 
 После запуска:
 
@@ -107,10 +80,8 @@ dotnet run --urls="http://0.0.0.0:5029"
 
 **Frontend:**
 
-text
-
-cd pozdravlyator.client
-python -m http.server 3000 --bind 0.0.0.0
+    cd pozdravlyator.client
+    python -m http.server 3000 --bind 0.0.0.0
 
 Фронтенд доступен по адресу [http://localhost:3000](http://localhost:3000/)
 
@@ -142,23 +113,17 @@ python -m http.server 3000 --bind 0.0.0.0
 
 **Создать запись:**
 
-text
-
-curl -X POST http://localhost:5029/api/birthdays \
- -H "Content-Type: application/json" \
- -d '{"firstName":"Иван","lastName":"Петров","birthDate":"1990-05-15"}'
+    curl -X POST http://localhost:5029/api/birthdays \
+     -H "Content-Type: application/json" \
+     -d '{"firstName":"Иван","lastName":"Петров","birthDate":"1990-05-15"}'
 
 **Получить ближайшие (7 дней):**
 
-text
-
-curl "http://localhost:5029/api/birthdays/upcoming?days=7"
+    curl "http://localhost:5029/api/birthdays/upcoming?days=7"
 
 **Загрузить фото:**
 
-text
-
-curl -X POST http://localhost:5029/api/birthdays/1/photo -F "file=@photo.jpg"
+    curl -X POST http://localhost:5029/api/birthdays/1/photo -F "file=@photo.jpg"
 
 ----------
 
@@ -166,9 +131,7 @@ curl -X POST http://localhost:5029/api/birthdays/1/photo -F "file=@photo.jpg"
 
 Для демонстрации приложения:
 
-text
-
-ngrok http 5029
+    ngrok http 5029
 
 Полученную ссылку можно отправить другим людям.
 
