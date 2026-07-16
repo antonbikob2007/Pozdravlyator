@@ -1,24 +1,20 @@
 @echo off
-chcp 65001 > nul
+chcp 1251 > nul
 
 echo ========================================
 echo  ПОЗДРАВЛЯТОР - ЗАПУСК
 echo ========================================
 echo.
 
-:: Проверяем .NET
 where dotnet > nul 2>&1
 if errorlevel 1 (
-    echo [ОШИБКА] .NET SDK не найден!
+    echo [ОШИБКА] .NET SDK не найден
     echo Скачай: https://dotnet.microsoft.com/download
-    echo.
-    echo Нажми любую клавишу для выхода...
-    pause > nul
+    pause
     exit /b
 )
 echo [OK] .NET найден
 
-:: Проверяем ngrok
 where ngrok > nul 2>&1
 if errorlevel 1 (
     echo [ВНИМАНИЕ] ngrok не найден
@@ -27,16 +23,14 @@ if errorlevel 1 (
     echo.
 )
 
-:: Получаем IP
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr "IPv4"') do set IP=%%a
 set IP=%IP: =%
-set IP=%IP:IPv4-адрес. . . . . . . . . . . =%
 set IP=%IP:IPv4-address. . . . . . . . . . . =%
+set IP=%IP:IPv4-адрес. . . . . . . . . . . =%
 
 echo [OK] IP: %IP%
 echo.
 
-:: Копируем фронтенд
 if not exist "src\Pozdravlyator.Api\wwwroot\index.html" (
     echo Копирование файлов фронтенда...
     xcopy /E /I /Y pozdravlyator.client\* src\Pozdravlyator.Api\wwwroot\ > nul 2>&1
@@ -44,18 +38,14 @@ if not exist "src\Pozdravlyator.Api\wwwroot\index.html" (
 )
 echo.
 
-:: Разрешаем порт
-netsh advfirewall firewall add rule name="Поздравлятор 5029" dir=in action=allow protocol=TCP localport=5029 > nul 2>&1
+netsh advfirewall firewall add rule name="Pozdravlyator 5029" dir=in action=allow protocol=TCP localport=5029 > nul 2>&1
 
-:: Запускаем сервер
 echo Запуск сервера...
-start "Сервер" cmd /k "cd /d src\Pozdravlyator.Api && dotnet run --urls="http://0.0.0.0:5029""
+start "Server" cmd /k "cd /d src\Pozdravlyator.Api && dotnet run --urls="http://0.0.0.0:5029""
 
-:: Ждем 5 секунд
-echo Ожидание запуска сервера...
+echo Ожидание 5 секунд...
 timeout /t 5 /nobreak > nul
 
-:: Проверяем ngrok еще раз
 where ngrok > nul 2>&1
 if errorlevel 1 (
     echo.
@@ -74,19 +64,16 @@ if errorlevel 1 (
     echo 4. Выполни: ngrok config add-authtoken ТВОЙ_ТОКЕН
     echo 5. Запусти: ngrok http 5029
     echo.
-    echo Нажми любую клавишу для выхода...
-    pause > nul
+    pause
     exit /b
 )
 
-:: Запускаем ngrok
 echo Запуск ngrok...
 start "Ngrok" cmd /k "ngrok http 5029"
 
-:: Ждем 3 секунды
+echo Ожидание 3 секунды...
 timeout /t 3 /nobreak > nul
 
-:: Получаем ссылку
 for /f "tokens=*" %%a in ('curl -s http://127.0.0.1:4040/api/tunnels ^| findstr "public_url"') do set NGROK_LINE=%%a
 set NGROK_URL=%NGROK_LINE:*"public_url":"=%
 set NGROK_URL=%NGROK_URL:"%,}=%
@@ -101,8 +88,7 @@ echo  Swagger:     http://localhost:5029/swagger
 echo  Публичная:   %NGROK_URL%
 echo ========================================
 echo.
-echo Не закрывай окна с сервером и ngrok!
+echo Не закрывай окна с сервером и ngrok
 echo Для остановки нажми Ctrl+C в каждом окне
 echo.
-echo Нажми любую клавишу для выхода...
-pause > nul
+pause
