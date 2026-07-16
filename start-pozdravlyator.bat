@@ -5,78 +5,149 @@ echo ========================================
 echo  POZDRAVLYATOR - START
 echo ========================================
 echo.
-echo Current folder: %CD%
-echo.
+
+:: =============================================
+:: 1. ПРОВЕРКА .NET
+:: =============================================
 
 where dotnet > nul 2>&1
 if errorlevel 1 (
     echo [ERROR] .NET SDK not found!
-    echo Download: https://dotnet.microsoft.com/download
-    pause
-    exit /b
+    echo.
+    echo Downloading .NET 9.0 SDK...
+    echo.
+    
+    :: Скачиваем .NET 9.0 SDK
+    powershell -Command "Invoke-WebRequest -Uri 'https://download.visualstudio.microsoft.com/download/pr/7d02d9a1-11c3-487b-a3e6-3d8d40cedda4/d75d4997878b4a9a5664c837f01e96ee/dotnet-sdk-9.0.100-win-x64.exe' -OutFile '%TEMP%\dotnet-sdk-9.0.100-win-x64.exe'"
+    
+    if exist "%TEMP%\dotnet-sdk-9.0.100-win-x64.exe" (
+        echo [OK] Downloaded successfully
+        echo.
+        echo Installing .NET 9.0 SDK...
+        echo Please follow the installation wizard
+        echo.
+        start /wait "" "%TEMP%\dotnet-sdk-9.0.100-win-x64.exe" /quiet /norestart
+        echo.
+        echo [OK] Installation complete
+        echo.
+    ) else (
+        echo [ERROR] Failed to download .NET SDK
+        echo Please download manually: https://dotnet.microsoft.com/download/dotnet/9.0
+        pause
+        exit /b
+    )
 )
 
-for /f "tokens=*" %%i in ('dotnet --version') do echo [OK] .NET version: %%i
+:: Проверяем версию
+for /f "tokens=*" %%i in ('dotnet --version') do set DOTNET_VER=%%i
+echo [OK] .NET version: %DOTNET_VER%
 
-if not exist "src\Pozdravlyator.Api\Pozdravlyator.Api.csproj" (
-    echo [ERROR] Project file not found!
-    echo Expected: src\Pozdravlyator.Api\Pozdravlyator.Api.csproj
-    echo Current folder: %CD%
-    pause
-    exit /b
+echo %DOTNET_VER% | findstr "9." > nul
+if errorlevel 1 (
+    echo [WARNING] .NET 9.0 is recommended
+    echo You have: %DOTNET_VER%
+    echo.
+    echo Download .NET 9.0: https://dotnet.microsoft.com/download/dotnet/9.0
+    echo Press any key to continue anyway...
+    pause > nul
 )
 
-echo [OK] Project found
+:: =============================================
+:: 2. ПРОВЕРКА NGROK
+:: =============================================
+
+where ngrok > nul 2>&1
+if errorlevel 1 (
+    echo [WARN] ngrok not found - installing...
+    echo.
+    echo Downloading ngrok...
+    powershell -Command "Invoke-WebRequest -Uri 'https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip' -OutFile '%TEMP%\ngrok.zip'"
+    
+    if exist "%TEMP%\ngrok.zip" (
+        echo [OK] Downloaded successfully
+        echo Installing ngrok to current folder...
+        powershell -Command "Expand-Archive -Path '%TEMP%\ngrok.zip' -DestinationPath '%~dp0' -Force"
+        echo [OK] ngrok installed
+        echo.
+    ) else (
+        echo [ERROR] Failed to download ngrok
+        echo Please download manually: https://ngrok.com/download
+        echo.
+    )
+)
+
+:: =============================================
+:: 3. ЗАПУСК СЕРВЕРА
+:: =============================================
+
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr "IPv4"') do set IP=%%a
+set IP=%IP: =%
+set IP=%IP:IPv4-address. . . . . . . . . . . =%
+set IP=%IP:IPv4-адрес. . . . . . . . . . . =%
+
+echo [OK] IP: %IP%
 echo.
-
-if not exist "src\Pozdravlyator.Api\wwwroot" (
-    echo Creating wwwroot folder...
-    mkdir src\Pozdravlyator.Api\wwwroot
-)
 
 if not exist "src\Pozdravlyator.Api\wwwroot\index.html" (
     echo Copying frontend files...
     xcopy /E /I /Y pozdravlyator.client\* src\Pozdravlyator.Api\wwwroot\ > nul 2>&1
+    echo [OK] Files copied
 )
-
-echo Building and starting server...
 echo.
 
-:: Запускаем сервер в новом окне
-start "Server" cmd /k "cd /d "%~dp0src\Pozdravlyator.Api" && echo Starting server... && dotnet run --urls="http://0.0.0.0:5029""
+netsh advfirewall firewall add rule name="Pozdravlyator 5029" dir=in action=allow protocol=TCP localport=5029 > nul 2>&1
 
-echo Waiting 10 seconds for server to start...
+echo Starting server...
+start "Server" cmd /k "cd /d "%~dp0src\Pozdravlyator.Api" && dotnet run --urls="http://0.0.0.0:5029""
+
+echo Waiting 10 seconds...
 timeout /t 10 /nobreak > nul
 
-:: Проверяем, запущен ли сервер
-netstat -ano | findstr :5029 > nul
+:: =============================================
+:: 4. ЗАПУСК NGROK
+:: =============================================
+
+where ngrok > nul 2>&1
 if errorlevel 1 (
-    echo [WARNING] Server may not be running on port 5029
-    echo Check the Server window for errors
-) else (
-    echo [OK] Server is running on port 5029
+    echo.
+    echo ========================================
+    echo  LOCAL ACCESS ONLY
+    echo ========================================
+    echo  http://localhost:5029
+    echo  http://%IP%:5029
+    echo  http://%IP%:5029/swagger
+    echo ========================================
+    echo.
+    echo To enable public access, install ngrok manually
+    echo 1. Download: https://ngrok.com/download
+    echo 2. Register: https://ngrok.com
+    echo 3. Get token from dashboard
+    echo 4. Run: ngrok config add-authtoken YOUR_TOKEN
+    echo 5. Run: ngrok http 5029
+    echo.
+    pause
+    exit /b
 )
 
-echo.
-echo ========================================
-echo  TO ACCESS:
-echo ========================================
-echo  Local: http://localhost:5029
-echo.
-echo  If localhost doesnt work, try:
-echo  http://127.0.0.1:5029
-echo.
-echo  Check Server window for errors
-echo ========================================
-echo.
-echo Press any key to open in browser...
-pause > nul
+echo Starting ngrok...
+start "Ngrok" cmd /k "ngrok http 5029"
 
-start http://localhost:5029
+timeout /t 3 /nobreak > nul
+
+:: Получаем ссылку
+for /f "tokens=*" %%a in ('curl -s http://127.0.0.1:4040/api/tunnels ^| findstr "public_url"') do set NGROK_LINE=%%a
+set NGROK_URL=%NGROK_LINE:*"public_url":"=%
+set NGROK_URL=%NGROK_URL:"%,}=%
 
 echo.
 echo ========================================
-echo  Keep this window open
-echo  Close it when you want to stop
+echo  SERVER STARTED
 echo ========================================
+echo  Local:       http://localhost:5029
+echo  Local:       http://%IP%:5029
+echo  Swagger:     http://localhost:5029/swagger
+echo  Public:      %NGROK_URL%
+echo ========================================
+echo.
+echo Keep windows open. Press Ctrl+C to stop
 pause
