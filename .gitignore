@@ -1,0 +1,36 @@
+# .NET Core
+src/*/bin/
+src/*/obj/
+*.db
+*.db-shm
+*.db-wal
+*.user
+*.suo
+*.userosscache
+*.vs/
+*.vscode/
+*.idea/
+*.slnx
+
+# Python
+pozdravlyator.client/__pycache__/
+pozdravlyator.client/*.pyc
+pozdravlyator.client/.venv/
+
+# Node.js
+pozdravlyator.client/node_modules/
+pozdravlyator.client/dist/
+pozdravlyator.client/.env
+
+# Visual Studio
+.vs/
+*.swp
+*.swo
+
+# Logs
+*.log
+*.tmp
+
+# Publish
+src/Pozdravlyator.Api/wwwroot/
+src/Pozdravlyator.Api/publish/

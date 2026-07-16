@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Поздравлятор</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="app">
+        <!-- Шапка -->
+        <header>
+            <div class="header-content">
+                <h1>🎉 Поздравлятор</h1>
+                <nav>
+                    <a href="#" onclick="navigateTo('home')" class="active">Главная</a>
+                    <a href="#" onclick="navigateTo('list')">Все ДР</a>
+                    <a href="#" onclick="navigateTo('add')">➕ Добавить</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Контент -->
+        <main id="content">
+            <!-- Сюда будет загружаться контент -->
+        </main>
+    </div>
+
+    <!-- Модальное окно для просмотра фото -->
+    <div id="photoModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img id="modalImage" src="" alt="Фото" />
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
