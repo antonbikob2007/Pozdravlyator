@@ -1,5 +1,8 @@
 @echo off
 
+:: Переход в папку где находится батник
+cd /d "%~dp0"
+
 echo ========================================
 echo  POZDRAVLYATOR - START
 echo ========================================
@@ -28,14 +31,30 @@ set IP=%IP:IPv4-address. . . . . . . . . . . =%
 echo [OK] IP: %IP%
 echo.
 
+:: Проверяем наличие папок
+if not exist "src\Pozdravlyator.Api" (
+    echo [ERROR] src\Pozdravlyator.Api not found!
+    echo Make sure you are in the correct folder.
+    echo Current folder: %CD%
+    pause
+    exit /b
+)
+
+if not exist "pozdravlyator.client" (
+    echo [ERROR] pozdravlyator.client not found!
+    pause
+    exit /b
+)
+
 if not exist "src\Pozdravlyator.Api\wwwroot\index.html" (
+    echo Copying frontend files...
     xcopy /E /I /Y pozdravlyator.client\* src\Pozdravlyator.Api\wwwroot\ > nul 2>&1
 )
 
 netsh advfirewall firewall add rule name="Pozdravlyator 5029" dir=in action=allow protocol=TCP localport=5029 > nul 2>&1
 
 echo Starting server...
-start "Server" cmd /k "cd /d src\Pozdravlyator.Api && dotnet run --urls="http://0.0.0.0:5029""
+start "Server" cmd /k "cd /d "%~dp0src\Pozdravlyator.Api" && dotnet run --urls="http://0.0.0.0:5029""
 
 timeout /t 5 /nobreak > nul
 
