@@ -1,95 +1,105 @@
 @echo off
+chcp 65001 > nul
 cd /d "%~dp0"
 
 echo ========================================
-echo  POZDRAVLYATOR - START
+echo  ПОЗДРАВЛЯТОР - ЗАПУСК
 echo ========================================
 echo.
 
 :: =============================================
-:: 1. ПРОВЕРКА .NET
+:: 1. ПРОВЕРКА .NET SDK
 :: =============================================
 
 where dotnet > nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] .NET SDK not found!
+    echo [ОШИБКА] .NET SDK не найден!
     echo.
-    echo Download and install .NET 9.0 SDK:
-    echo https://dotnet.microsoft.com/download/dotnet/9.0
+    echo Открываем страницу для скачивания...
+    start https://dotnet.microsoft.com/download/dotnet/8.0
+    echo.
+    echo Скачай и установи .NET 8.0 SDK
+    echo После установки перезагрузи компьютер
     echo.
     pause
     exit /b
 )
 
 for /f "tokens=*" %%i in ('dotnet --version') do set DOTNET_VER=%%i
-echo [OK] .NET version: %DOTNET_VER%
+echo [OK] .NET SDK: %DOTNET_VER%
 echo.
 
 :: =============================================
-:: 2. ПРОВЕРКА ПРОЕКТА
+:: 2. ПРОВЕРКА ASP.NET CORE RUNTIME 8.0
 :: =============================================
 
-if not exist "src\Pozdravlyator.Api\Pozdravlyator.Api.csproj" (
-    echo [ERROR] Project not found!
-    echo Make sure you are in the correct folder
+echo Проверка ASP.NET Core Runtime 8.0...
+
+:: Сохраняем список установленных runtime в файл
+dotnet --list-runtimes > "%TEMP%\runtimes.txt"
+
+:: Ищем точное совпадение с 8.0
+findstr /C:"Microsoft.AspNetCore.App 8." "%TEMP%\runtimes.txt" > nul
+if errorlevel 1 (
+    echo.
+    echo [ОШИБКА] ASP.NET Core Runtime 8.0 не найден!
+    echo.
+    echo Установленные runtime:
+    type "%TEMP%\runtimes.txt"
+    echo.
+    echo Открываем страницу для скачивания...
+    start https://dotnet.microsoft.com/download/dotnet/8.0
+    echo.
+    echo Скачай и установи ASP.NET Core Runtime 8.0
+    echo После установки перезагрузи компьютер
+    echo.
+    del "%TEMP%\runtimes.txt"
     pause
     exit /b
 )
 
-:: =============================================
-:: 3. КОПИРОВАНИЕ ФРОНТЕНДА
-:: =============================================
-
-if not exist "src\Pozdravlyator.Api\wwwroot\index.html" (
-    echo Copying frontend files...
-    xcopy /E /I /Y pozdravlyator.client\* src\Pozdravlyator.Api\wwwroot\ > nul 2>&1
-    echo [OK] Files copied
-)
+del "%TEMP%\runtimes.txt"
+echo [OK] ASP.NET Core Runtime 8.0 найден
 echo.
 
 :: =============================================
-:: 4. ЗАПРОС NGROK
+:: 3. ЗАПУСК СЕРВЕРА
 :: =============================================
 
-set USE_NGROK=N
+:: Проверка проекта
+if not exist "src\Pozdravlyator.Api\Pozdravlyator.Api.csproj" (
+    echo [ОШИБКА] Проект не найден!
+    pause
+    exit /b
+)
 
+:: Копирование фронтенда
+if not exist "src\Pozdravlyator.Api\wwwroot\index.html" (
+    echo Копирование файлов...
+    xcopy /E /I /Y pozdravlyator.client\* src\Pozdravlyator.Api\wwwroot\ > nul 2>&1
+    echo [OK] Файлы скопированы
+)
+echo.
+
+:: Проверка ngrok
+set USE_NGROK=N
 where ngrok > nul 2>&1
 if errorlevel 1 (
-    echo [WARN] ngrok not found
-    echo Public access will not work
+    echo [ВНИМАНИЕ] ngrok не найден
+    echo Публичный доступ не будет работать
     echo.
-    echo To enable public access, install ngrok:
-    echo 1. Download: https://ngrok.com/download
-    echo 2. Register: https://ngrok.com
-    echo 3. Get token from dashboard
-    echo 4. Run: ngrok config add-authtoken YOUR_TOKEN
-    echo.
-    echo Or press Enter to continue without ngrok
+    echo Скачать ngrok: https://ngrok.com/download
     echo.
 ) else (
-    echo [OK] ngrok found
+    echo [OK] ngrok найден
     echo.
-    echo Do you want to use ngrok for public access?
-    echo [Y] Yes - start ngrok and get public URL
-    echo [N] No - local access only
-    echo.
-    choice /C YN /N /M "Your choice (Y/N): "
-    if errorlevel 2 (
-        set USE_NGROK=N
-        echo.
-        echo Local access only
-    ) else (
-        set USE_NGROK=Y
-        echo.
-        echo Public access enabled
-    )
+    echo Использовать ngrok для публичного доступа? (Y/N)
+    choice /C YN /N /M "Ваш выбор: "
+    if not errorlevel 2 set USE_NGROK=Y
 )
 echo.
 
-:: =============================================
-:: 5. ЗАПУСК СЕРВЕРА
-:: =============================================
-
+:: Получаем IP
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr "IPv4"') do set IP=%%a
 set IP=%IP: =%
 set IP=%IP:IPv4-address. . . . . . . . . . . =%
@@ -98,23 +108,18 @@ set IP=%IP:IPv4-адрес. . . . . . . . . . . =%
 echo [OK] IP: %IP%
 echo.
 
-netsh advfirewall firewall add rule name="Pozdravlyator 5029" dir=in action=allow protocol=TCP localport=5029 > nul 2>&1
-
-echo Starting server...
+:: Запуск сервера
+echo Запуск сервера...
 start "Server" cmd /k "cd /d "%~dp0src\Pozdravlyator.Api" && dotnet run --urls="http://0.0.0.0:5029""
 
-echo Waiting 10 seconds...
-timeout /t 10 /nobreak > nul
+timeout /t 8 /nobreak > nul
 
-:: =============================================
-:: 6. ЗАПУСК NGROK (если выбран)
-:: =============================================
-
+:: Запуск ngrok
 if "%USE_NGROK%"=="Y" (
-    echo Starting ngrok...
+    echo Запуск ngrok...
     start "Ngrok" cmd /k "ngrok http 5029"
     timeout /t 3 /nobreak > nul
-    
+
     for /f "tokens=*" %%a in ('curl -s http://127.0.0.1:4040/api/tunnels ^| findstr "public_url"') do set NGROK_LINE=%%a
     set NGROK_URL=%NGROK_LINE:*"public_url":"=%
     set NGROK_URL=%NGROK_URL:"%,}=%
@@ -122,15 +127,13 @@ if "%USE_NGROK%"=="Y" (
 
 echo.
 echo ========================================
-echo  SERVER STARTED
+echo  СЕРВЕР ЗАПУЩЕН
 echo ========================================
-echo  Local:       http://localhost:5029
-echo  Local:       http://%IP%:5029
+echo  Локально:    http://localhost:5029
+echo  Локально:    http://%IP%:5029
 echo  Swagger:     http://localhost:5029/swagger
-if "%USE_NGROK%"=="Y" (
-    echo  Public:      %NGROK_URL%
-)
+if "%USE_NGROK%"=="Y" echo  Публичная:   %NGROK_URL%
 echo ========================================
 echo.
-echo Keep windows open. Press Ctrl+C to stop
+echo Не закрывай окна. Для остановки Ctrl+C
 pause

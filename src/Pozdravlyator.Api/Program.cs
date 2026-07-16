@@ -10,14 +10,13 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ============ НАСТРОЙКА CORS ============
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()      // Разрешаем любые источники
-              .AllowAnyMethod()      // Разрешаем любые методы (GET, POST, PUT, DELETE)
-              .AllowAnyHeader();     // Разрешаем любые заголовки
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
@@ -31,9 +30,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
-
-app.UseDefaultFiles();   
-app.UseStaticFiles();    
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthorization();
 app.MapControllers();
 
