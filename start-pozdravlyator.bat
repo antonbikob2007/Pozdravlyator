@@ -1,6 +1,4 @@
 @echo off
-
-:: Переход в папку где находится батник
 cd /d "%~dp0"
 
 echo ========================================
@@ -19,6 +17,7 @@ if errorlevel 1 (
 where ngrok > nul 2>&1
 if errorlevel 1 (
     echo [WARN] ngrok not found
+    echo Public access will not work
     echo Download: https://ngrok.com/download
     echo.
 )
@@ -26,36 +25,24 @@ if errorlevel 1 (
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr "IPv4"') do set IP=%%a
 set IP=%IP: =%
 set IP=%IP:IPv4-address. . . . . . . . . . . =%
-set IP=%IP:IPv4-address. . . . . . . . . . . =%
+set IP=%IP:IPv4-адрес. . . . . . . . . . . =%
 
 echo [OK] IP: %IP%
 echo.
 
-:: Проверяем наличие папок
-if not exist "src\Pozdravlyator.Api" (
-    echo [ERROR] src\Pozdravlyator.Api not found!
-    echo Make sure you are in the correct folder.
-    echo Current folder: %CD%
-    pause
-    exit /b
-)
-
-if not exist "pozdravlyator.client" (
-    echo [ERROR] pozdravlyator.client not found!
-    pause
-    exit /b
-)
-
 if not exist "src\Pozdravlyator.Api\wwwroot\index.html" (
     echo Copying frontend files...
     xcopy /E /I /Y pozdravlyator.client\* src\Pozdravlyator.Api\wwwroot\ > nul 2>&1
+    echo [OK] Files copied
 )
+echo.
 
 netsh advfirewall firewall add rule name="Pozdravlyator 5029" dir=in action=allow protocol=TCP localport=5029 > nul 2>&1
 
 echo Starting server...
 start "Server" cmd /k "cd /d "%~dp0src\Pozdravlyator.Api" && dotnet run --urls="http://0.0.0.0:5029""
 
+echo Waiting 5 seconds...
 timeout /t 5 /nobreak > nul
 
 where ngrok > nul 2>&1
@@ -69,9 +56,9 @@ if errorlevel 1 (
     echo  http://%IP%:5029/swagger
     echo ========================================
     echo.
-    echo Install ngrok for public access:
-    echo 1. Download: https://ngrok.com/download
-    echo 2. Register: https://ngrok.com
+    echo To enable public access:
+    echo 1. Install ngrok: https://ngrok.com/download
+    echo 2. Register at ngrok.com
     echo 3. Get token from dashboard
     echo 4. Run: ngrok config add-authtoken YOUR_TOKEN
     echo 5. Run: ngrok http 5029
@@ -83,6 +70,7 @@ if errorlevel 1 (
 echo Starting ngrok...
 start "Ngrok" cmd /k "ngrok http 5029"
 
+echo Waiting 3 seconds...
 timeout /t 3 /nobreak > nul
 
 for /f "tokens=*" %%a in ('curl -s http://127.0.0.1:4040/api/tunnels ^| findstr "public_url"') do set NGROK_LINE=%%a
@@ -100,5 +88,4 @@ echo  Public:      %NGROK_URL%
 echo ========================================
 echo.
 echo Keep windows open. Press Ctrl+C to stop
-echo.
 pause
