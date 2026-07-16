@@ -8,28 +8,43 @@
 </head>
 <body>
     <div id="app">
-        <!-- Шапка -->
-        <header>
-            <div class="header-content">
-                <h1>🎉 Поздравлятор</h1>
-                <nav>
-                    <a href="#" onclick="navigateTo('home')" class="active">Главная</a>
-                    <a href="#" onclick="navigateTo('list')">Все ДР</a>
-                    <a href="#" onclick="navigateTo('add')">➕ Добавить</a>
-                </nav>
+        <!-- Боковая панель -->
+        <aside id="sidebar">
+            <div class="logo">
+                ПОЗДРАВЛЯТОР
             </div>
-        </header>
+            <nav>
+                <a href="#" onclick="navigateTo('home')" class="active">
+                    Главная
+                </a>
+                <a href="#" onclick="navigateTo('list')">
+                    Все записи
+                </a>
+                <a href="#" onclick="navigateTo('add')">
+                    Добавить
+                </a>
+            </nav>
+            <div class="sidebar-footer"></div>
+        </aside>
 
-        <!-- Контент -->
-        <main id="content">
-            <!-- Сюда будет загружаться контент -->
+        <!-- Основной контент -->
+        <main id="main">
+            <header>
+                <div class="header-info">
+                    <h2 id="page-title">Главная</h2>
+                    <span id="page-count"></span>
+                </div>
+            </header>
+            <section id="content">
+                <!-- сюда загружается контент -->
+            </section>
         </main>
     </div>
 
-    <!-- Модальное окно для просмотра фото -->
+    <!-- Модальное окно -->
     <div id="photoModal" class="modal" style="display:none">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
+            <span class="close" onclick="closeModal()">✕</span>
             <img id="modalImage" src="" alt="Фото" />
         </div>
     </div>
