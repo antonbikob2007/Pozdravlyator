@@ -1,5 +1,5 @@
 // Конфигурация API
-const API_URL = 'http://26.254.73.55:5029/api';
+const API_URL = window.location.origin + '/api';
 
 // Текущая страница
 let currentPage = 'home';
